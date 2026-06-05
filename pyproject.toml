@@ -1,0 +1,21 @@
+[project]
+name = "maternity-rag"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "chromadb>=1.5.8",
+    "llama-index>=0.14.20",
+    "llama-index-embeddings-gemini>=0.4.2",
+    "llama-index-embeddings-google-genai>=0.5.0",
+    "llama-index-embeddings-huggingface>=0.7.0",
+    "llama-index-embeddings-openai>=0.6.0",
+    "llama-index-llms-gemini>=0.6.2",
+    "llama-index-llms-google-genai>=0.9.1",
+    "llama-index-llms-openai>=0.7.5",
+    "llama-index-vector-stores-chroma>=0.5.5",
+    "pymupdf>=1.27.2.2",
+    "python-dotenv>=1.2.2",
+    "streamlit>=1.56.0",
+]
