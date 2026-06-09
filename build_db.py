@@ -9,31 +9,39 @@ from llama_index.vector_stores.chroma import ChromaVectorStore
 
 load_dotenv()
 
-def extract_text_from_pdfs(data_dir: str) -> list[Document]:
-    """PyMuPDFで全PDFからテキストを抽出"""
+def extract_text_from_files(data_dir: str) -> list[Document]:
+    """PDFとtxt/mdファイルからテキストを抽出"""
     documents = []
     for filename in os.listdir(data_dir):
-        if not filename.endswith(".pdf"):
-            continue
         filepath = os.path.join(data_dir, filename)
-        print(f"読み込み中: {filename}")
         
-        pdf = fitz.open(filepath)
-        for page_num, page in enumerate(pdf):
-            text = page.get_text()
-            if text.strip():  # 空ページは無視
+        if filename.endswith(".pdf"):
+            # 既存のPDF処理
+            print(f"読み込み中(PDF): {filename}")
+            pdf = fitz.open(filepath)
+            for page_num, page in enumerate(pdf):
+                text = page.get_text()
+                if text.strip():
+                    documents.append(Document(
+                        text=text,
+                        metadata={"file_name": filename, "page": page_num + 1}
+                    ))
+            print(f"  → {len(pdf)}ページ読み込みました")
+            pdf.close()
+
+        elif filename.endswith((".txt", ".md")):
+            # テキストファイルはそのまま読む
+            print(f"読み込み中(テキスト): {filename}")
+            with open(filepath, "r", encoding="utf-8") as f:
+                text = f.read()
+            if text.strip():
                 documents.append(Document(
                     text=text,
-                    metadata={
-                        "file_name": filename,
-                        "page": page_num + 1
-                    }
+                    metadata={"file_name": filename}
                 ))
-        
-        print(f"  → {len(pdf)}ページ読み込みました")
-        pdf.close()
-    
-    print(f"\n合計 {len(documents)} ページ分のテキストを取得")
+            print(f"  → 読み込みました")
+
+    print(f"\n合計 {len(documents)} ドキュメント分のテキストを取得")
     return documents
 
 def main():
@@ -46,21 +54,20 @@ def main():
     # 古いDBを削除して作り直す
     db = chromadb.PersistentClient(path="./chroma_db")
     
-    # 既存コレクションを削除（バイナリデータが混じっているため）
     try:
-        db.delete_collection("maternity_rag_local_v1")
+        db.delete_collection("akashikosen_v1")
         print("古いDBを削除しました")
     except:
         pass
     
-    chroma_collection = db.get_or_create_collection("maternity_rag_local_v1")
+    chroma_collection = db.get_or_create_collection("akashikosen_v1")
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
 
-    # PyMuPDFでテキスト抽出
-    documents = extract_text_from_pdfs("./data")
+    # テキスト抽出
+    documents = extract_text_from_files("./data")
     if not documents:
-        print("エラー: dataフォルダにPDFがありません")
+        print("エラー: dataフォルダにファイルがありません")
         return
 
     print("\nベクトル化中...")
@@ -69,7 +76,7 @@ def main():
         storage_context=storage_context,
         show_progress=True
     )
-    print("✅ DB作成完了！")
+    print("✅ DB作成完了!")
 
 if __name__ == "__main__":
     main()

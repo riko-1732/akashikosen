@@ -1,7 +1,7 @@
 import os
 import chromadb
 from dotenv import load_dotenv
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings, StorageContext
+from llama_index.core import VectorStoreIndex, Settings, StorageContext
 from llama_index.core.prompts import PromptTemplate
 from llama_index.llms.google_genai import GoogleGenAI
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
@@ -31,34 +31,23 @@ def main():
     Settings.embed_batch_size = 100
 
     db = chromadb.PersistentClient(path="./chroma_db")
-    chroma_collection = db.get_or_create_collection("maternity_rag_local_v1")
+    chroma_collection = db.get_or_create_collection("akashikosen_v1")
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
 
-    if chroma_collection.count() > 0:
-        print(">>> 既存のデータベースを読み込みました。")
-        index = VectorStoreIndex.from_vector_store(
-            vector_store,
-            storage_context=storage_context
-        )
-    else:
-        print(">>> PDFを読み込んで新規作成します...")
-        if not os.path.exists("./data") or not os.listdir("./data"):
-            print("エラー: dataフォルダにPDFを入れてください。")
-            return
-        documents = SimpleDirectoryReader("./data").load_data()
-        print("ベクトル化中...")
-        index = VectorStoreIndex.from_documents(
-            documents,
-            storage_context=storage_context,
-            show_progress=True
-        )
-        print(">>> 完了しました。")
+    if chroma_collection.count() == 0:
+        print("エラー: DBが空です。先にbuild_db.pyを実行してください。")
+        return
 
-    # 日本語プロンプトをセット
+    print(">>> 既存のデータベースを読み込みました。")
+    index = VectorStoreIndex.from_vector_store(
+        vector_store,
+        storage_context=storage_context
+    )
+
     query_engine = index.as_query_engine(
         text_qa_template=JP_QA_PROMPT,
-        similarity_top_k=3  # 参照するチャンク数
+        similarity_top_k=3
     )
 
     print("\n" + "="*40)
