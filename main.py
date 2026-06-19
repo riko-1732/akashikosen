@@ -1,6 +1,12 @@
 import os
-import chromadb
+import uuid
+from datetime import datetime
 from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+import chromadb
 from llama_index.core import VectorStoreIndex, Settings, StorageContext
 from llama_index.core.prompts import PromptTemplate
 from llama_index.llms.google_genai import GoogleGenAI
@@ -8,11 +14,16 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.chroma import ChromaVectorStore
 
 load_dotenv()
-api_key = os.getenv("GOOGLE_API_KEY")
 
-# 日本語用プロンプト
+# ===== 設定 =====
+API_KEY = os.getenv("GOOGLE_API_KEY")
+if not API_KEY:
+    raise ValueError("GOOGLE_API_KEY が .env に設定されていません")
+
+# 日本語プロンプトテンプレート（指示に合わせて修正）
 JP_QA_PROMPT = PromptTemplate(
-    "以下の情報を参考にして、質問に日本語で答えてください。\n"
+    "以下の情報をもとに、質問に日本語でわかりやすく答えてください。\n"
+    "回答は中学生でも理解できる言葉を使ってください。\n"
     "情報に記載がない場合は「その情報は手元の資料にありません。」と答えてください。\n\n"
     "参考情報:\n"
     "---------------------\n"
@@ -22,24 +33,64 @@ JP_QA_PROMPT = PromptTemplate(
     "回答:"
 )
 
-def main():
-    print("ローカルEmbeddingモデルを準備中...")
-    Settings.llm = GoogleGenAI(model="gemini-2.5-flash", api_key=api_key)
+# ===== データモデル =====
+class ChatRequest(BaseModel):
+    message: str
+
+
+class ChatResponse(BaseModel):
+    answer: str
+    sources: list[str]
+
+
+# ===== FastAPI アプリ初期化 =====
+app = FastAPI(
+    title="明石高専 案内ボット",
+    description="学校紹介・入試案内に特化したRAGチャットボット",
+    version="1.0.0",
+)
+
+# CORS設定
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ===== 静的ファイル（フロントエンド） =====
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+
+# ===== グローバル状態 =====
+query_engine = None
+
+
+def init_rag():
+    """RAG エンジンの初期化"""
+    global query_engine
+    
+    print("🚀 Embedding モデルを準備中...")
+    Settings.llm = GoogleGenAI(model="gemini-2.5-flash", api_key=API_KEY)
     Settings.embed_model = HuggingFaceEmbedding(model_name="intfloat/multilingual-e5-small")
     Settings.chunk_size = 512
     Settings.chunk_overlap = 50
     Settings.embed_batch_size = 100
 
+    print("📦 ChromaDB から既存ベクトルストアを読み込み中...")
     db = chromadb.PersistentClient(path="./chroma_db")
     chroma_collection = db.get_or_create_collection("akashi_kosen_v1")
+    
+    if chroma_collection.count() == 0:
+        raise RuntimeError(
+            "❌ ベクトルDB が空です。先に `uv run python build_db.py` を実行してください。"
+        )
+
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
-
-    if chroma_collection.count() == 0:
-        print("エラー: DBが空です。先にbuild_db.pyを実行してください。")
-        return
-
-    print(">>> 既存のデータベースを読み込みました。")
+    
+    print(f"✅ {chroma_collection.count()} チャンク読み込み完了")
+    
     index = VectorStoreIndex.from_vector_store(
         vector_store,
         storage_context=storage_context
@@ -49,28 +100,65 @@ def main():
         text_qa_template=JP_QA_PROMPT,
         similarity_top_k=3
     )
+    print("✅ RAG エンジン初期化完了\n")
 
-    print("\n" + "="*40)
-    print("RAGチャットボット起動")
-    print("終了: 'q' を入力")
-    print("="*40)
 
-    while True:
-        question = input("\nあなた: ")
-        if question.lower() in ['q', 'quit', 'exit']:
-            print("終了します。")
-            break
-        if not question.strip():
-            continue
+@app.on_event("startup")
+async def startup_event():
+    """アプリ起動時の初期化"""
+    init_rag()
 
-        print("思考中...")
-        response = query_engine.query(question)
-        print(f"\nAI: {response}")
 
-        print("\n[参照元]")
+# ===== API エンドポイント =====
+
+@app.get("/health")
+async def health_check():
+    """ヘルスチェック"""
+    return {"status": "ok"}
+
+
+@app.post("/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest):
+    """
+    チャットメッセージを受け取り、RAG で回答を生成
+    
+    リクエスト: {"message": "質問文"}
+    レスポンス: {"answer": "回答文", "sources": ["ファイル名1", ...]}
+    """
+    if not request.message or not request.message.strip():
+        raise HTTPException(status_code=400, detail="メッセージが空です")
+    
+    if query_engine is None:
+        raise HTTPException(status_code=500, detail="RAG エンジンが初期化されていません")
+
+    try:
+        # RAG で質問に回答
+        response = query_engine.query(request.message)
+        
+        # 参照ソースを抽出
+        sources = []
+        seen = set()
         for node in response.source_nodes:
-            score = node.score if node.score is not None else 0.0
-            print(f"  - {node.metadata.get('file_name')} (Score: {score:.4f})")
+            file_name = node.metadata.get("file_name")
+            if file_name and file_name not in seen:
+                sources.append(file_name)
+                seen.add(file_name)
+        
+        return ChatResponse(
+            answer=str(response),
+            sources=sources
+        )
+    
+    except Exception as e:
+        print(f"❌ エラー: {str(e)}")
+        raise HTTPException(status_code=500, detail="回答生成中にエラーが発生しました")
 
+
+# ===== 起動スクリプト =====
 if __name__ == "__main__":
-    main()
+    import uvicorn
+    print("=" * 50)
+    print("明石高専 RAG チャットボット")
+    print("=" * 50)
+    print("🌍 http://localhost:8000 で起動します\n")
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
