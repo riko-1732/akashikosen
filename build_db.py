@@ -55,12 +55,12 @@ def main():
     db = chromadb.PersistentClient(path="./chroma_db")
     
     try:
-        db.delete_collection("akashikosen_v1")
+        db.delete_collection("akashi_kosen_v1")
         print("古いDBを削除しました")
     except:
         pass
     
-    chroma_collection = db.get_or_create_collection("akashikosen_v1")
+    chroma_collection = db.get_or_create_collection("akashi_kosen_v1")
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
 

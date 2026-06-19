@@ -31,7 +31,7 @@ def main():
     Settings.embed_batch_size = 100
 
     db = chromadb.PersistentClient(path="./chroma_db")
-    chroma_collection = db.get_or_create_collection("akashikosen_v1")
+    chroma_collection = db.get_or_create_collection("akashi_kosen_v1")
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
 

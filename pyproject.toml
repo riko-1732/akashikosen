@@ -1,7 +1,7 @@
 [project]
-name = "maternity-rag"
+name = "akashi-chatbot"
 version = "0.1.0"
-description = "Add your description here"
+description = "明石高専 RAGチャットボット - 学校紹介・入試案内特化"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
