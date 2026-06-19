@@ -116,12 +116,6 @@ async def health_check():
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
-    """
-    チャットメッセージを受け取り、RAG で回答を生成
-    
-    リクエスト: {"message": "質問文"}
-    レスポンス: {"answer": "回答文", "sources": ["ファイル名1", ...]}
-    """
     if not request.message or not request.message.strip():
         raise HTTPException(status_code=400, detail="メッセージが空です")
     
@@ -129,10 +123,8 @@ async def chat(request: ChatRequest):
         raise HTTPException(status_code=500, detail="RAG エンジンが初期化されていません")
 
     try:
-        # RAG で質問に回答
-        response = query_engine.query(request.message)
+        response = await query_engine.aquery(request.message)  # ← aquery に変更
         
-        # 参照ソースを抽出
         sources = []
         seen = set()
         for node in response.source_nodes:
@@ -149,7 +141,6 @@ async def chat(request: ChatRequest):
     except Exception as e:
         print(f"❌ エラー: {str(e)}")
         raise HTTPException(status_code=500, detail="回答生成中にエラーが発生しました")
-
 
 # ===== 静的ファイル（フロントエンド）- API定義の後ろに配置 =====
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")

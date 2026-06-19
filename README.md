@@ -13,16 +13,16 @@
 
 ## 🛠️ 技術スタック
 
-| 項目 | 選択 |
-|------|------|
-| バックエンド | Python / FastAPI |
-| RAG フレームワーク | LlamaIndex |
-| LLM API | Google Gemini 2.5 Flash |
-| ベクトルDB | ChromaDB (ローカル・永続化) |
-| Embedding | intfloat/multilingual-e5-small |
-| PDF テキスト抽出 | PyMuPDF (fitz) |
-| フロントエンド | HTML / CSS / JavaScript |
-| 環境管理 | uv (Python) |
+| 項目               | 選択                           |
+| ------------------ | ------------------------------ |
+| バックエンド       | Python / FastAPI               |
+| RAG フレームワーク | LlamaIndex                     |
+| LLM API            | Google Gemini 2.5 Flash        |
+| ベクトルDB         | ChromaDB (ローカル・永続化)    |
+| Embedding          | intfloat/multilingual-e5-small |
+| PDF テキスト抽出   | PyMuPDF (fitz)                 |
+| フロントエンド     | HTML / CSS / JavaScript        |
+| 環境管理           | uv (Python)                    |
 
 ## 📁 ディレクトリ構成
 
@@ -43,6 +43,7 @@ akashi-chatbot/
 ## 🚀 起動手順
 
 ### 1. 依存インストール
+
 ```bash
 uv sync
 ```
@@ -56,10 +57,12 @@ uv run python build_db.py
 ```
 
 **入力ファイル形式：**
+
 - PDF: `data/*.pdf`
 - テキスト: `data/*.txt`, `data/*.md`
 
 **出力:**
+
 - `chroma_db/akashi_kosen_v1` コレクション作成
 
 ### 3. サーバー起動
@@ -81,6 +84,7 @@ http://localhost:8000
 ### `POST /chat`
 
 **リクエスト:**
+
 ```json
 {
   "message": "ユーザーの質問"
@@ -88,6 +92,7 @@ http://localhost:8000
 ```
 
 **レスポンス:**
+
 ```json
 {
   "answer": "回答テキスト",
@@ -98,6 +103,7 @@ http://localhost:8000
 ### `GET /health`
 
 ヘルスチェック
+
 ```json
 {
   "status": "ok"
@@ -109,6 +115,7 @@ http://localhost:8000
 ### プロンプトテンプレート（main.py）
 
 中学生向けの日本語プロンプトがハードコードされています：
+
 ```python
 JP_QA_PROMPT = PromptTemplate(
     "以下の情報をもとに、質問に日本語でわかりやすく答えてください。\n"
@@ -119,12 +126,12 @@ JP_QA_PROMPT = PromptTemplate(
 
 ### RAG パラメータ
 
-| 項目 | 値 | 備考 |
-|------|-----|------|
-| `chunk_size` | 512 | テキストチャンクサイズ |
-| `chunk_overlap` | 50 | チャンク間の重複 |
-| `similarity_top_k` | 3 | 検索結果の上位件数 |
-| Embedding モデル | `intfloat/multilingual-e5-small` | HuggingFace |
+| 項目               | 値                               | 備考                   |
+| ------------------ | -------------------------------- | ---------------------- |
+| `chunk_size`       | 512                              | テキストチャンクサイズ |
+| `chunk_overlap`    | 50                               | チャンク間の重複       |
+| `similarity_top_k` | 3                                | 検索結果の上位件数     |
+| Embedding モデル   | `intfloat/multilingual-e5-small` | HuggingFace            |
 
 ## 🔐 環境設定
 
@@ -140,6 +147,7 @@ https://aistudio.google.com/app/apikey
 ## 💡 使用例
 
 **中学生の質問例：**
+
 - 「普通高校と何が違うの？」
 - 「入試ではどんな科目があるの？」
 - 「卒業後の進路を教えて」
@@ -149,10 +157,13 @@ https://aistudio.google.com/app/apikey
 ## 📝 よくある質問
 
 ### Q: ブラウザを開いてもページが真っ白です
+
 **A:** サーバーログを確認してください。`build_db.py` を実行しているか、GOOGLE_API_KEY が設定されているか確認してください。
 
 ### Q: API から「ベクトルDB が空です」というエラーが出ます
+
 **A:** 以下の手順で DB を構築してください：
+
 ```bash
 # 1. data/ に PDF を配置
 # 2. DB 構築
@@ -162,7 +173,9 @@ uv run uvicorn main:app --reload
 ```
 
 ### Q: 回答が「その情報は手元の資料にありません」ばかりです
+
 **A:** PDF の品質やフォーマット、検索ロジックを確認してください。例えば：
+
 - テキスト層のない画像スキャンPDF → OCR 必要
 - スキャン品質が低い → テキスト認識率低下
 - 検索キーワードと資料内容の言葉遣いが違う
@@ -170,9 +183,11 @@ uv run uvicorn main:app --reload
 ## 🛠️ トラブルシューティング
 
 ### リセットボタンで履歴削除後も応答が古い場合
+
 ブラウザキャッシュをクリアしてください。
 
 ### サーバーが起動しない場合
+
 ```bash
 # ポート8000が既に使われていないか確認
 netstat -ano | findstr :8000
