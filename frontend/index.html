@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>明石高専 案内ボット</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <!-- 左パネル：ロゴ・サンプル質問 -->
+      <div class="left-panel">
+        <div class="header">
+          <div class="logo-section">
+            <div class="school-icon">🏫</div>
+            <div class="school-name">明石工業高等専門学校</div>
+            <div class="school-subtitle">学校紹介・入試案内ボット</div>
+          </div>
+        </div>
+
+        <div class="samples-section">
+          <div class="samples-label">こんなことを聞いてみよう</div>
+          <button
+            class="sample-button"
+            onclick="sendSampleQuestion('普通高校と何が違うの？')"
+          >
+            普通高校と何が違うの？
+          </button>
+          <button
+            class="sample-button"
+            onclick="sendSampleQuestion('入試ではどんな科目があるの？')"
+          >
+            入試ではどんな科目があるの？
+          </button>
+          <button
+            class="sample-button"
+            onclick="sendSampleQuestion('卒業後の進路を教えて')"
+          >
+            卒業後の進路を教えて
+          </button>
+          <button
+            class="sample-button"
+            onclick="sendSampleQuestion('どんな学科があるの？')"
+          >
+            どんな学科があるの？
+          </button>
+          <button
+            class="sample-button"
+            onclick="sendSampleQuestion('寮はありますか？')"
+          >
+            寮はありますか？
+          </button>
+          <button
+            class="sample-button"
+            onclick="sendSampleQuestion('授業料はいくら？')"
+          >
+            授業料はいくら？
+          </button>
+        </div>
+
+        <div class="footer-section">
+          <div class="data-badge">
+            📚 参照データ：<br />
+            明石高専公式サイト・入試要項
+          </div>
+        </div>
+      </div>
+
+      <!-- 右パネル：チャット -->
+      <div class="right-panel">
+        <div class="chat-header">
+          <div class="bot-icon">🤖</div>
+          <div class="header-text">
+            <div class="header-title">明石高専 案内ボット</div>
+            <div class="header-subtitle">公式情報のみをお答えします</div>
+          </div>
+          <button class="reset-button" onclick="resetChat()">
+            🔄 リセット
+          </button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+          <div class="message bot-message">
+            <div class="message-content">
+              こんにちは！🎓<br />
+              明石工業高等専門学校についてご質問ありましたら、左のボタンをクリックするか、直接お入力ください。
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-input-area">
+          <input
+            type="text"
+            id="messageInput"
+            class="chat-input"
+            placeholder="質問を入力してください..."
+            autocomplete="off"
+          />
+          <button class="send-button" id="sendButton" onclick="sendMessage()">
+            ➤
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_URL = "/chat";
+      const messageInput = document.getElementById("messageInput");
+      const sendButton = document.getElementById("sendButton");
+      const chatMessages = document.getElementById("chatMessages");
+
+      // ページロード時にフォーカス
+      window.addEventListener("load", () => {
+        messageInput.focus();
+      });
+
+      // Enterキーで送信
+      messageInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          sendMessage();
+        }
+      });
+
+      async function sendMessage() {
+        const message = messageInput.value.trim();
+        if (!message || sendButton.disabled) return;
+
+        // UI無効化
+        sendButton.disabled = true;
+        messageInput.disabled = true;
+        sendButton.innerText = "思考中...";
+
+        // ユーザーメッセージを表示
+        addMessage(message, "user");
+        messageInput.value = "";
+
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ message }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP Error: ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          // ボット回答を表示
+          addMessage(data.answer, "bot");
+
+          // 参照元を表示
+          if (data.sources && data.sources.length > 0) {
+            const sourceText = `参照: ${data.sources.join(", ")}`;
+            addMessage(sourceText, "source");
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          addMessage(
+            "通信エラーが発生しました。もう一度お試しください。",
+            "bot-error",
+          );
+        } finally {
+          // UI復帰
+          sendButton.disabled = false;
+          messageInput.disabled = false;
+          sendButton.innerText = "➤";
+          messageInput.focus();
+        }
+      }
+
+      function sendSampleQuestion(question) {
+        messageInput.value = question;
+        sendMessage();
+      }
+
+      function addMessage(text, type) {
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add("message");
+
+        if (type === "user") {
+          messageDiv.classList.add("user-message");
+          messageDiv.innerHTML = `<div class="message-content">${escapeHtml(text)}</div>`;
+        } else if (type === "bot") {
+          messageDiv.classList.add("bot-message");
+          messageDiv.innerHTML = `<div class="message-content">${escapeHtml(text)}</div>`;
+        } else if (type === "source") {
+          messageDiv.classList.add("source-message");
+          messageDiv.innerHTML = `<div class="message-content">${escapeHtml(text)}</div>`;
+        } else if (type === "bot-error") {
+          messageDiv.classList.add("bot-message");
+          messageDiv.innerHTML = `<div class="message-content error">${escapeHtml(text)}</div>`;
+        }
+
+        chatMessages.appendChild(messageDiv);
+        messageDiv.scrollIntoView({ behavior: "smooth" });
+      }
+
+      function resetChat() {
+        if (confirm("チャット履歴をリセットしますか？")) {
+          chatMessages.innerHTML = `
+                    <div class="message bot-message">
+                        <div class="message-content">
+                            チャットがリセットされました。<br>
+                            改めてご質問をお待ちしています。🎓
+                        </div>
+                    </div>
+                `;
+          messageInput.value = "";
+          messageInput.focus();
+        }
+      }
+
+      function escapeHtml(text) {
+        const map = {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;",
+        };
+        return text.replace(/[&<>"']/g, (m) => map[m]);
+      }
+    </script>
+  </body>
+</html>
