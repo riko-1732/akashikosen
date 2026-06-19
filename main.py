@@ -59,9 +59,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ===== 静的ファイル（フロントエンド） =====
-app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
-
 # ===== グローバル状態 =====
 query_engine = None
 
@@ -152,6 +149,10 @@ async def chat(request: ChatRequest):
     except Exception as e:
         print(f"❌ エラー: {str(e)}")
         raise HTTPException(status_code=500, detail="回答生成中にエラーが発生しました")
+
+
+# ===== 静的ファイル（フロントエンド）- API定義の後ろに配置 =====
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
 
 
 # ===== 起動スクリプト =====
