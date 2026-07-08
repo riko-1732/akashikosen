@@ -1,1 +1,0 @@
-invalid type: string "{\"id_\": \"bf2ec936-62fb-49cf-a3fd-695e19f8f670\", \"embedding\": null, \"metadata\": {\"file_name\": \"05_学生寮情報.txt\"}, \"excluded_embed_metadata_keys\": [], \"excluded_llm_metadata_keys\": [], \"relationships\": {\"1\": {\"node_id\": \"a06d355f-3838-41eb-be14-501e16a4f6db\", \"node_type\": \"4\", \"metadata\": {\"file_name\": \"05_学生寮情報.txt\"}, \"hash\"
