@@ -9,22 +9,26 @@ from pydantic import BaseModel
 import chromadb
 from llama_index.core import VectorStoreIndex, Settings, StorageContext
 from llama_index.core.prompts import PromptTemplate
-from llama_index.llms.google_genai import GoogleGenAI
+from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.chroma import ChromaVectorStore
 
 load_dotenv()
 
 # ===== 設定 =====
-API_KEY = os.getenv("GOOGLE_API_KEY")
+API_KEY = os.getenv("OPENAI_API_KEY")
 if not API_KEY:
-    raise ValueError("GOOGLE_API_KEY が .env に設定されていません")
+    raise ValueError("OPENAI_API_KEY が .env に設定されていません")
 
 # 日本語プロンプトテンプレート（指示に合わせて修正）
 JP_QA_PROMPT = PromptTemplate(
-    "以下の情報をもとに、質問に日本語でわかりやすく答えてください。\n"
-    "回答は中学生でも理解できる言葉を使ってください。\n"
-    "情報に記載がない場合は「その情報は手元の資料にありません。」と答えてください。\n\n"
+    "以下の情報をもとに、質問に日本語で答えてください。\n"
+    "【必須ルール】\n"
+    "・必ず「です・ます」調（敬体）で答えてください。「だよ」「だね」などの常体は絶対に使わないでください。\n"
+    "・回答は簡潔にまとめ、長くなる場合は箇条書きを使って3〜5項目以内に収めてください。\n"
+    "・中学生とその保護者にもわかりやすい言葉を使ってください。\n"
+    "・情報に記載のない学科・内容については触れないでください。記載されている学科は必ずすべて含めてください。\n"
+    "・情報に記載がない場合は「その情報は手元の資料にありません。明石高専の入試窓口にお問い合わせください。」と答えてください。\n\n"
     "参考情報:\n"
     "---------------------\n"
     "{context_str}\n"
@@ -68,10 +72,10 @@ def init_rag():
     global query_engine
     
     print("🚀 Embedding モデルを準備中...")
-    Settings.llm = GoogleGenAI(model="gemini-2.5-flash", api_key=API_KEY)
+    Settings.llm = OpenAI(model="gpt-5-mini", api_key=API_KEY, temperature=0)
     Settings.embed_model = HuggingFaceEmbedding(model_name="intfloat/multilingual-e5-small")
-    Settings.chunk_size = 512
-    Settings.chunk_overlap = 50
+    Settings.chunk_size = 1024
+    Settings.chunk_overlap = 100
     Settings.embed_batch_size = 100
 
     print("📦 ChromaDB から既存ベクトルストアを読み込み中...")
@@ -95,7 +99,8 @@ def init_rag():
 
     query_engine = index.as_query_engine(
         text_qa_template=JP_QA_PROMPT,
-        similarity_top_k=3
+        similarity_top_k=5,
+        response_mode="compact"
     )
     print("✅ RAG エンジン初期化完了\n")
 

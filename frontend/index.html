@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>明石高専 案内ボット</title>
     <link rel="stylesheet" href="style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+</head>
   </head>
   <body>
     <div class="container">
@@ -179,13 +181,13 @@
       function addMessage(text, type) {
         const messageDiv = document.createElement("div");
         messageDiv.classList.add("message");
-
+      
         if (type === "user") {
           messageDiv.classList.add("user-message");
           messageDiv.innerHTML = `<div class="message-content">${escapeHtml(text)}</div>`;
         } else if (type === "bot") {
           messageDiv.classList.add("bot-message");
-          messageDiv.innerHTML = `<div class="message-content">${escapeHtml(text)}</div>`;
+          messageDiv.innerHTML = `<div class="message-content">${marked.parse(text)}</div>`;
         } else if (type === "source") {
           messageDiv.classList.add("source-message");
           messageDiv.innerHTML = `<div class="message-content">${escapeHtml(text)}</div>`;
@@ -193,7 +195,7 @@
           messageDiv.classList.add("bot-message");
           messageDiv.innerHTML = `<div class="message-content error">${escapeHtml(text)}</div>`;
         }
-
+      
         chatMessages.appendChild(messageDiv);
         messageDiv.scrollIntoView({ behavior: "smooth" });
       }

@@ -47,8 +47,8 @@ def extract_text_from_files(data_dir: str) -> list[Document]:
 def main():
     print("Embeddingモデル準備中...")
     Settings.embed_model = HuggingFaceEmbedding(model_name="intfloat/multilingual-e5-small")
-    Settings.chunk_size = 512
-    Settings.chunk_overlap = 50
+    Settings.chunk_size = 1024
+    Settings.chunk_overlap = 100
     Settings.embed_batch_size = 100
 
     # 古いDBを削除して作り直す

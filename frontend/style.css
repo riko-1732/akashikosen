@@ -243,6 +243,32 @@ html {
   background: #ffebee;
 }
 
+/* marked.jsが生成するタグのリセット */
+.message-content p {
+  font-size: 16px;
+  margin: 0 0 8px 0;
+  line-height: 1.7;
+}
+
+.message-content p:last-child {
+  margin-bottom: 0;
+}
+
+.message-content strong {
+  font-weight: 700;
+}
+
+.message-content ul,
+.message-content ol {
+  font-size: 16px;
+  padding-left: 20px;
+  margin: 4px 0;
+}
+
+.message-content li {
+  margin-bottom: 4px;
+  line-height: 1.7;
+}
 .source-message .message-content {
   background: transparent;
   color: #666;
