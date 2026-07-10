@@ -6,7 +6,6 @@
     <title>明石高専 案内ボット</title>
     <link rel="stylesheet" href="style.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
-</head>
   </head>
   <body>
     <div class="container">
@@ -20,24 +19,12 @@
         </div>
 
         <div class="samples-section">
-          <div class="samples-label">こんなことを聞いてみよう</div>
+          <div class="samples-label">気になることを聞いてみよう</div>
           <button
             class="sample-button"
             onclick="sendSampleQuestion('普通高校と何が違うの？')"
           >
             普通高校と何が違うの？
-          </button>
-          <button
-            class="sample-button"
-            onclick="sendSampleQuestion('入試ではどんな科目があるの？')"
-          >
-            入試ではどんな科目があるの？
-          </button>
-          <button
-            class="sample-button"
-            onclick="sendSampleQuestion('卒業後の進路を教えて')"
-          >
-            卒業後の進路を教えて
           </button>
           <button
             class="sample-button"
@@ -47,15 +34,40 @@
           </button>
           <button
             class="sample-button"
-            onclick="sendSampleQuestion('寮はありますか？')"
+            onclick="sendSampleQuestion('どんな授業があるの？')"
           >
-            寮はありますか？
+            どんな授業があるの？
           </button>
           <button
             class="sample-button"
-            onclick="sendSampleQuestion('授業料はいくら？')"
+            onclick="sendSampleQuestion('部活は何がある？')"
           >
-            授業料はいくら？
+            部活は何がある？
+          </button>
+          <div class="samples-divider"></div>
+          <button
+            class="sample-button"
+            onclick="sendSampleQuestion('入試の科目と配点は？')"
+          >
+            入試の科目と配点は？
+          </button>
+          <button
+            class="sample-button"
+            onclick="sendSampleQuestion('授業料はいくらかかりますか？')"
+          >
+            授業料はいくらかかりますか？
+          </button>
+          <button
+            class="sample-button"
+            onclick="sendSampleQuestion('卒業後の進路は？')"
+          >
+            卒業後の進路は？
+          </button>
+          <button
+            class="sample-button"
+            onclick="sendSampleQuestion('寮はありますか？')"
+          >
+            寮はありますか？
           </button>
         </div>
 
@@ -70,7 +82,6 @@
       <!-- 右パネル：チャット -->
       <div class="right-panel">
         <div class="chat-header">
-          <div class="bot-icon">🤖</div>
           <div class="header-text">
             <div class="header-title">明石高専 案内ボット</div>
             <div class="header-subtitle">公式情報のみをお答えします</div>
@@ -83,8 +94,8 @@
         <div class="chat-messages" id="chatMessages">
           <div class="message bot-message">
             <div class="message-content">
-              こんにちは！🎓<br />
-              明石工業高等専門学校についてご質問ありましたら、左のボタンをクリックするか、直接お入力ください。
+              こんにちは！<br />
+              明石工業高等専門学校についてご質問がありましたら、左のボタンをクリックするか、直接入力してください。
             </div>
           </div>
         </div>
@@ -110,12 +121,10 @@
       const sendButton = document.getElementById("sendButton");
       const chatMessages = document.getElementById("chatMessages");
 
-      // ページロード時にフォーカス
       window.addEventListener("load", () => {
         messageInput.focus();
       });
 
-      // Enterキーで送信
       messageInput.addEventListener("keypress", (e) => {
         if (e.key === "Enter") {
           sendMessage();
@@ -126,37 +135,27 @@
         const message = messageInput.value.trim();
         if (!message || sendButton.disabled) return;
 
-        // UI無効化
         sendButton.disabled = true;
         messageInput.disabled = true;
         sendButton.innerText = "思考中...";
 
-        // ユーザーメッセージを表示
         addMessage(message, "user");
         messageInput.value = "";
 
         try {
           const response = await fetch(API_URL, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ message }),
           });
 
-          if (!response.ok) {
-            throw new Error(`HTTP Error: ${response.status}`);
-          }
+          if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
 
           const data = await response.json();
-
-          // ボット回答を表示
           addMessage(data.answer, "bot");
 
-          // 参照元を表示
           if (data.sources && data.sources.length > 0) {
-            const sourceText = `参照: ${data.sources.join(", ")}`;
-            addMessage(sourceText, "source");
+            addMessage(`参照: ${data.sources.join(", ")}`, "source");
           }
         } catch (error) {
           console.error("Error:", error);
@@ -165,7 +164,6 @@
             "bot-error",
           );
         } finally {
-          // UI復帰
           sendButton.disabled = false;
           messageInput.disabled = false;
           sendButton.innerText = "➤";
@@ -181,7 +179,7 @@
       function addMessage(text, type) {
         const messageDiv = document.createElement("div");
         messageDiv.classList.add("message");
-      
+
         if (type === "user") {
           messageDiv.classList.add("user-message");
           messageDiv.innerHTML = `<div class="message-content">${escapeHtml(text)}</div>`;
@@ -195,7 +193,7 @@
           messageDiv.classList.add("bot-message");
           messageDiv.innerHTML = `<div class="message-content error">${escapeHtml(text)}</div>`;
         }
-      
+
         chatMessages.appendChild(messageDiv);
         messageDiv.scrollIntoView({ behavior: "smooth" });
       }
@@ -203,13 +201,12 @@
       function resetChat() {
         if (confirm("チャット履歴をリセットしますか？")) {
           chatMessages.innerHTML = `
-                    <div class="message bot-message">
-                        <div class="message-content">
-                            チャットがリセットされました。<br>
-                            改めてご質問をお待ちしています。🎓
-                        </div>
-                    </div>
-                `;
+            <div class="message bot-message">
+              <div class="message-content">
+                チャットがリセットされました。<br>
+                改めてご質問をお待ちしています。🎓
+              </div>
+            </div>`;
           messageInput.value = "";
           messageInput.focus();
         }

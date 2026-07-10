@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from llama_index.core import VectorStoreIndex, Document, Settings, StorageContext
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.chroma import ChromaVectorStore
+import shutil
 
 load_dotenv()
 
@@ -47,18 +48,15 @@ def extract_text_from_files(data_dir: str) -> list[Document]:
 def main():
     print("Embeddingモデル準備中...")
     Settings.embed_model = HuggingFaceEmbedding(model_name="intfloat/multilingual-e5-small")
-    Settings.chunk_size = 1024
-    Settings.chunk_overlap = 100
+    Settings.chunk_size = 512
+    Settings.chunk_overlap = 50
     Settings.embed_batch_size = 100
 
-    # 古いDBを削除して作り直す
-    db = chromadb.PersistentClient(path="./chroma_db")
+    if os.path.exists("./chroma_db"):
+        shutil.rmtree("./chroma_db")
+        print("古いchroma_dbフォルダを削除しました")
     
-    try:
-        db.delete_collection("akashi_kosen_v1")
-        print("古いDBを削除しました")
-    except:
-        pass
+    db = chromadb.PersistentClient(path="./chroma_db")
     
     chroma_collection = db.get_or_create_collection("akashi_kosen_v1")
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)

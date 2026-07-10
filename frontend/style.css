@@ -33,9 +33,9 @@ html {
   color: #ffffff;
   display: flex;
   flex-direction: column;
-  padding: 30px 20px;
+  padding: 24px 18px;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
-  overflow-y: auto;
+  overflow-y: hidden;
 }
 
 /* 右パネル（チャット） */
@@ -49,7 +49,7 @@ html {
 
 /* ===== 左パネル：ヘッダー ===== */
 .left-panel .header {
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   text-align: center;
 }
 
@@ -57,60 +57,63 @@ html {
   animation: slideInDown 0.6s ease;
 }
 
-.school-icon {
-  font-size: 48px;
-  margin-bottom: 10px;
-}
-
 .school-name {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: bold;
-  margin-bottom: 8px;
+  color: #ffffff;
+  margin-bottom: 6px;
   line-height: 1.3;
 }
 
 .school-subtitle {
-  font-size: 13px;
-  opacity: 0.9;
+  font-size: 12px;
+  color: #ffffff;
+  opacity: 0.85;
   line-height: 1.4;
 }
 
 /* ===== 左パネル：サンプル質問 ===== */
 .samples-section {
   flex: 1;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
+  overflow-y: hidden;
 }
 
 .samples-label {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
-  margin-bottom: 15px;
-  opacity: 0.95;
-  text-transform: uppercase;
+  color: #ffffff;
+  margin-bottom: 10px;
   letter-spacing: 0.5px;
+}
+
+.samples-divider {
+  height: 0.5px;
+  background: rgba(255, 255, 255, 0.25);
+  margin: 12px 0;
 }
 
 .sample-button {
   display: block;
   width: 100%;
-  padding: 12px 15px;
-  margin-bottom: 10px;
-  background: rgba(255, 255, 255, 0.15);
+  padding: 10px 13px;
+  margin-bottom: 8px;
+  background: rgba(255, 255, 255, 0.12);
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   text-align: left;
   line-height: 1.4;
   font-weight: 500;
 }
 
 .sample-button:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.24);
   border-color: rgba(255, 255, 255, 0.5);
-  transform: translateX(5px);
+  transform: translateX(4px);
 }
 
 .sample-button:active {
@@ -119,17 +122,19 @@ html {
 
 /* ===== 左パネル：フッター ===== */
 .footer-section {
-  padding-top: 20px;
+  padding-top: 16px;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .data-badge {
-  font-size: 12px;
+  font-size: 11px;
+  color: #ffffff;
   background: rgba(255, 255, 255, 0.1);
-  padding: 12px;
+  padding: 10px 12px;
   border-radius: 6px;
-  border-left: 3px solid rgba(255, 255, 255, 0.5);
+  border-left: 3px solid rgba(255, 255, 255, 0.4);
   line-height: 1.6;
+  opacity: 0.85;
 }
 
 /* ===== 右パネル：チャットヘッダー ===== */
@@ -192,16 +197,13 @@ html {
 .chat-messages::-webkit-scrollbar {
   width: 8px;
 }
-
 .chat-messages::-webkit-scrollbar-track {
   background: #f1f1f1;
 }
-
 .chat-messages::-webkit-scrollbar-thumb {
   background: #bbb;
   border-radius: 4px;
 }
-
 .chat-messages::-webkit-scrollbar-thumb:hover {
   background: #888;
 }
@@ -269,6 +271,7 @@ html {
   margin-bottom: 4px;
   line-height: 1.7;
 }
+
 .source-message .message-content {
   background: transparent;
   color: #666;
@@ -363,21 +366,18 @@ html {
   }
 }
 
-/* ===== レスポンシブ対応（デスクトップ表示を前提） ===== */
+/* ===== レスポンシブ対応 ===== */
 @media (max-width: 1024px) {
   .left-panel {
     width: 40%;
   }
-
   .right-panel {
     width: 60%;
   }
-
   .sample-button {
-    font-size: 13px;
-    padding: 10px 12px;
+    font-size: 12px;
+    padding: 9px 11px;
   }
-
   .user-message .message-content,
   .bot-message .message-content,
   .source-message .message-content {
@@ -390,38 +390,27 @@ html {
   .container {
     flex-direction: column;
   }
-
   .left-panel {
     width: 100%;
     height: auto;
     padding: 20px;
-    margin-bottom: 10px;
+    overflow-y: auto;
   }
-
   .right-panel {
     width: 100%;
     height: auto;
   }
-
-  .samples-label {
-    text-align: center;
-  }
-
   .sample-button {
     font-size: 14px;
-    max-width: 100%;
   }
-
   .user-message .message-content,
   .bot-message .message-content,
   .source-message .message-content {
     max-width: 100%;
   }
-
   .school-name {
     font-size: 16px;
   }
-
   .school-subtitle {
     font-size: 12px;
   }
